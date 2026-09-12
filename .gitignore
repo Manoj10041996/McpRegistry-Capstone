@@ -2,3 +2,11 @@
 __pycache__/
 *.pyc
 .env
+
+# GCP service account keys and other credential files — never commit these
+capstone-mcpregistry-8d635fd9d57c.json
+*-serviceaccount*.json
+*-service-account*.json
+*.pem
+*.key
+credentials.json
