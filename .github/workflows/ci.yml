@@ -1,8 +1,25 @@
 name: CI
 
+# This workflow runs automatically every time someone pushes to the "main"
+# branch. It has two jobs, one after the other:
+#   1. checks  - fast sanity checks (does the code lint, import, and build
+#                into a Docker image). If any of these fail, the workflow
+#                stops here and nothing gets deployed.
+#   2. deploy  - only runs if "checks" passed. It builds the real Docker
+#                image, uploads it to Google Artifact Registry, deploys it
+#                as a Cloud Run service, and prints the live application URL.
+
 on:
   push:
     branches: [main]
+
+# Values shared by every step below, so they're only written once.
+env:
+  PROJECT_ID: capstone-mcpregistry
+  REGION: us-central1
+  REPOSITORY: capstone-mcpregistry # the Artifact Registry Docker repo
+  SERVICE: agent-platform # the name the Cloud Run service will have
+  IMAGE: us-central1-docker.pkg.dev/capstone-mcpregistry/capstone-mcpregistry/agent-platform
 
 jobs:
   checks:
@@ -27,5 +44,81 @@ jobs:
       - name: Import check (app builds without error)
         run: uv run python -c "from app.main import app"
 
-      - name: Build Docker image
+      - name: Build Docker image (sanity check only, not the deployed image)
         run: docker build -t agent-platform:ci .
+
+  deploy:
+    needs: checks # wait for "checks" to succeed before deploying anything
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      # STEP 1 — Get a copy of the repository's code onto the GitHub runner,
+      # since the runner starts out empty.
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      # STEP 2 — Prove to Google Cloud who is running this workflow. The
+      # actual private key never lives in this file or in the repository —
+      # it's stored as an encrypted GitHub secret named GCP_SA_KEY, and only
+      # decrypted in memory for this one step.
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      # STEP 3 — Install the gcloud command-line tool on the runner, so
+      # later steps can call it.
+      - name: Set up gcloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+
+      # STEP 4 — Give the runner's local Docker permission to push images
+      # into Google's container registry (Artifact Registry).
+      - name: Let Docker push to Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      # STEP 5 — Build the Docker image from the Dockerfile in this repo.
+      # It gets two tags: the exact commit SHA (so you can always trace a
+      # running image back to the exact code that produced it) and
+      # "latest" (a convenient, always-current pointer).
+      - name: Build the Docker image
+        run: |
+          docker build \
+            -t ${{ env.IMAGE }}:${{ github.sha }} \
+            -t ${{ env.IMAGE }}:latest \
+            .
+
+      # STEP 6 — Upload both tags of that image to Artifact Registry, so
+      # Cloud Run (or anyone with access) can pull it from there.
+      - name: Push the image to Artifact Registry
+        run: |
+          docker push ${{ env.IMAGE }}:${{ github.sha }}
+          docker push ${{ env.IMAGE }}:latest
+
+      # STEP 7 — Tell Cloud Run to run this image as a live service. Cloud
+      # Run creates a new "revision", waits for it to report healthy, and
+      # then shifts all traffic to it. --no-allow-unauthenticated locks the
+      # service down: a caller needs a valid Google-issued identity token
+      # to reach it, so the URL is not open to the public internet; --port
+      # tells Cloud Run which port the app listens on inside the container
+      # (matches the Dockerfile's EXPOSE 8000).
+      - name: Deploy to Cloud Run
+        id: deploy
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: ${{ env.SERVICE }}
+          image: ${{ env.IMAGE }}:${{ github.sha }}
+          region: ${{ env.REGION }}
+          project_id: ${{ env.PROJECT_ID }}
+          flags: --no-allow-unauthenticated --port=8000
+
+      # STEP 8 — Print the live application URL somewhere easy to find:
+      # both in the plain log output and in the workflow's "Summary" tab
+      # (GitHub renders $GITHUB_STEP_SUMMARY as formatted Markdown).
+      - name: Show the application URL
+        run: |
+          echo "Deployed. Application URL: ${{ steps.deploy.outputs.url }}"
+          {
+            echo "### :rocket: Deployed to Cloud Run"
+            echo "**Application URL:** ${{ steps.deploy.outputs.url }}"
+          } >> "$GITHUB_STEP_SUMMARY"
