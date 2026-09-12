@@ -97,11 +97,11 @@ jobs:
 
       # STEP 7 — Tell Cloud Run to run this image as a live service. Cloud
       # Run creates a new "revision", waits for it to report healthy, and
-      # then shifts all traffic to it. --no-allow-unauthenticated locks the
-      # service down: a caller needs a valid Google-issued identity token
-      # to reach it, so the URL is not open to the public internet; --port
-      # tells Cloud Run which port the app listens on inside the container
-      # (matches the Dockerfile's EXPOSE 8000).
+      # then shifts all traffic to it. --allow-unauthenticated makes the
+      # URL publicly reachable (no Google login/token needed), so it opens
+      # directly in a browser; --port tells Cloud Run which port the app
+      # listens on inside the container (matches the Dockerfile's
+      # EXPOSE 8000).
       - name: Deploy to Cloud Run
         id: deploy
         uses: google-github-actions/deploy-cloudrun@v2
@@ -110,7 +110,7 @@ jobs:
           image: ${{ env.IMAGE }}:${{ github.sha }}
           region: ${{ env.REGION }}
           project_id: ${{ env.PROJECT_ID }}
-          flags: --no-allow-unauthenticated --port=8000
+          flags: --allow-unauthenticated --port=8000
 
       # STEP 8 — Print the live application URL somewhere easy to find:
       # both in the plain log output and in the workflow's "Summary" tab
