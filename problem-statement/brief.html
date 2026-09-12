@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Problem Statement — Agent Platform Capstone</title>
+<link rel="stylesheet" href="assets/style.css">
+<style>
+  .topnav {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 16px; padding: 10px 26px;
+  }
+  .topnav .links { display: flex; gap: 3px; flex-wrap: wrap; }
+  .topnav .lk {
+    padding: 5px 10px; border-radius: 7px; font-size: 13px;
+    font-weight: 550; color: var(--muted);
+  }
+  .topnav .lk:hover { background: var(--surface-2); color: var(--text); text-decoration: none; }
+  .topnav .lk.on { background: var(--accent-bg); color: var(--accent); font-weight: 620; }
+
+  .wrap { display: grid; grid-template-columns: 232px 1fr; gap: 40px; max-width: 1120px;
+          margin: 0 auto; padding: 34px 26px 100px; align-items: start; }
+  .toc { position: sticky; top: 66px; font-size: 13px; }
+  .toc a { display: block; padding: 4px 0 4px 11px; color: var(--muted);
+           border-left: 2px solid var(--border); line-height: 1.4; }
+  .toc a:hover { color: var(--text); text-decoration: none; border-left-color: var(--border-2); }
+  .toc a.h3 { padding-left: 22px; font-size: 12.3px; }
+  .toc a.on { color: var(--accent); border-left-color: var(--accent); font-weight: 600; }
+
+  .doc { min-width: 0; font-size: 14.5px; line-height: 1.68; }
+  .doc h1 { font-size: 31px; font-weight: 680; letter-spacing: -.025em; margin: 0 0 6px; }
+  .doc h2 { font-size: 21px; font-weight: 650; letter-spacing: -.015em;
+            margin: 44px 0 12px; padding-top: 18px; border-top: 1px solid var(--border); }
+  .doc h2:first-of-type { border-top: 0; padding-top: 0; }
+  .doc h3 { font-size: 16px; font-weight: 640; margin: 28px 0 8px; letter-spacing: -.01em; }
+  .doc h4 { font-size: 14px; font-weight: 640; margin: 20px 0 6px; }
+  .doc p { margin: 0 0 14px; }
+  .doc ul, .doc ol { margin: 0 0 14px; padding-left: 22px; }
+  .doc li { margin-bottom: 5px; }
+  .doc blockquote {
+    margin: 0 0 16px; padding: 11px 16px; border-left: 3px solid var(--accent);
+    background: var(--accent-bg); border-radius: 0 8px 8px 0; color: var(--text);
+  }
+  .doc blockquote p:last-child { margin-bottom: 0; }
+  .doc code { background: var(--surface-2); padding: 1.5px 5px; border-radius: 4px;
+              border: 1px solid var(--border); font-size: 12.8px; }
+  .doc pre code { background: none; border: 0; padding: 0; }
+  .doc table { width: 100%; border-collapse: collapse; font-size: 13.5px; margin: 0 0 18px; }
+  .doc th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em;
+            color: var(--faint); font-weight: 650; padding: 0 12px 8px;
+            border-bottom: 1px solid var(--border); }
+  .doc td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .doc hr { border: 0; border-top: 1px solid var(--border); margin: 34px 0; }
+  .doc em { color: var(--muted); }
+  .doc h2 + p > em:only-child { display: block; }
+
+  .lead {
+    font-size: 15px; color: var(--muted); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 15px 18px; background: var(--surface); margin-bottom: 26px;
+  }
+  @media (max-width: 900px) {
+    .wrap { grid-template-columns: 1fr; gap: 20px; padding: 22px 18px 70px; }
+    .toc { position: static; display: none; }
+    .topnav { padding: 10px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="mockbar">
+  <div class="row" style="gap:10px">
+    <span class="tag">CAPSTONE</span>
+    <span>Data Sense — Agent Builder. Read this, then look at the UI you need to build.</span>
+  </div>
+  <div class="row" style="gap:14px">
+    <a href="index.html">All screens</a>
+    <a href="https://github.com/fnusatvik07/agent-platform-capstone">GitHub</a>
+  </div>
+</div>
+
+<div class="topnav">
+  <a class="brand" href="index.html" style="padding:0"><span class="mark">F</span>Agent Platform Capstone</a>
+  <div class="links">
+    <a class="lk on" href="brief.html">Problem statement</a>
+    <a class="lk" href="index.html">The UI to build</a>
+    <a class="lk" href="screens/build.html">Build flow</a>
+    <a class="lk" href="deck/">Slides</a>
+  </div>
+</div>
+
+<div class="wrap">
+  <nav class="toc" id="toc"></nav>
+  <article class="doc" id="doc">
+    <div style="border:1px solid var(--border); border-radius:10px; padding:14px;
+                background:var(--surface); margin-bottom:30px">
+      <video controls preload="metadata" playsinline poster="video/poster.jpg"
+             style="width:100%; display:block; border-radius:7px; background:#000">
+        <source src="video/capstone-brief.mp4" type="video/mp4">
+        <a href="video/capstone-brief.mp4">Download the video.</a>
+      </video>
+      <div class="muted" style="font-size:13px; margin-top:10px">
+        The same brief, in three minutes.
+      </div>
+    </div>
+    <p class="muted">Loading…</p>
+  </article>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+(async () => {
+  const doc = document.getElementById("doc");
+  const toc = document.getElementById("toc");
+
+  let md;
+  try {
+    const r = await fetch("problem-statement.md", { cache: "no-cache" });
+    if (!r.ok) throw new Error(r.status);
+    md = await r.text();
+  } catch (e) {
+    doc.innerHTML = `<div class="req"><div class="rh">Could not load the brief</div>
+      Read it on GitHub instead:
+      <a href="https://github.com/fnusatvik07/agent-platform-capstone/blob/main/PROBLEM-STATEMENT.md">PROBLEM-STATEMENT.md</a></div>`;
+    return;
+  }
+
+  marked.use({ gfm: true, breaks: false });
+  doc.insertAdjacentHTML("beforeend", marked.parse(md));
+  doc.querySelector("p.muted")?.remove();
+
+  /* the eight rules read better as red requirement blocks */
+  doc.querySelectorAll("h3").forEach((h) => {
+    if (!/^\d+\.\s/.test(h.textContent)) return;
+    const block = document.createElement("div");
+    block.className = "req";
+    block.style.margin = "0 0 18px";
+    const rh = document.createElement("div");
+    rh.className = "rh";
+    rh.textContent = "Rule " + h.textContent.split(".")[0];
+    block.appendChild(rh);
+    const t = document.createElement("div");
+    t.style.cssText = "font-weight:640;font-size:15px;margin-bottom:6px";
+    t.textContent = h.textContent.replace(/^\d+\.\s*/, "");
+    block.appendChild(t);
+    let n = h.nextElementSibling;
+    while (n && !/^H[123]$/.test(n.tagName)) {
+      const next = n.nextElementSibling;
+      block.appendChild(n);
+      n = next;
+    }
+    h.replaceWith(block);
+  });
+  /* build the table of contents */
+  const heads = [...doc.querySelectorAll("h2, h3")];
+  heads.forEach((h, i) => {
+    h.id = h.id || "s" + i;
+    const a = document.createElement("a");
+    a.href = "#" + h.id;
+    a.textContent = h.textContent;
+    if (h.tagName === "H3") a.className = "h3";
+    toc.appendChild(a);
+  });
+
+  /* highlight the section you are reading */
+  const links = [...toc.querySelectorAll("a")];
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((en) => {
+      if (!en.isIntersecting) return;
+      links.forEach((l) => l.classList.toggle("on", l.getAttribute("href") === "#" + en.target.id));
+    });
+  }, { rootMargin: "-70px 0px -70% 0px" });
+  heads.forEach((h) => io.observe(h));
+
+})();
+</script>
+</body>
+</html>
