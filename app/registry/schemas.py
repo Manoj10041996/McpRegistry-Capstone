@@ -10,18 +10,12 @@ class RegisterServerRequest(BaseModel):
         extra="forbid",
     )
 
-    name: str = Field(
-        min_length=1,
-        max_length=100,
-    )
+    name: str = Field(min_length=1, max_length=100)
     endpoint: HttpUrl
 
 
 class ToolMetadata(BaseModel):
-    name: str = Field(
-        min_length=1,
-        max_length=128,
-    )
+    name: str = Field(min_length=1, max_length=128)
     description: str | None = None
     input_schema: dict[str, Any]
 
@@ -53,14 +47,8 @@ class CreateConnectionRequest(BaseModel):
         extra="forbid",
     )
 
-    name: str = Field(
-        min_length=1,
-        max_length=100,
-    )
-    secret_ref: str = Field(
-        min_length=1,
-        max_length=255,
-    )
+    name: str = Field(min_length=1, max_length=100)
+    secret_ref: str = Field(min_length=1, max_length=255)
 
 
 class ConnectionResponse(BaseModel):
@@ -76,3 +64,16 @@ class ConnectionTestResponse(BaseModel):
     server_id: int
     reachable: bool
     tool_count: int
+
+
+class ExecuteToolRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    arguments: dict[str, Any] = Field(default_factory=dict)
+
+
+class ExecuteToolResponse(BaseModel):
+    connection_id: int
+    tool_name: str
+    is_error: bool
+    structured_content: dict[str, Any] | None

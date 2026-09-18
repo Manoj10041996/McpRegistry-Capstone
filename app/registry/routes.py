@@ -6,6 +6,7 @@ from typing import Annotated
 from asyncpg import PostgresError
 from fastapi import APIRouter, Depends, HTTPException, Path, Query
 from sqlalchemy.exc import SQLAlchemyError
+from app.registry.tool_runner import execute_tool as call_mcp_tool
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.registry.connection_repository import (
@@ -36,6 +37,8 @@ from app.registry.schemas import (
     ServerListResponse,
     ServerResponse,
     ToolMetadata,
+    ExecuteToolRequest,
+    ExecuteToolResponse,
 )
 
 
@@ -413,4 +416,103 @@ async def test_connection(
         raise HTTPException(
             status_code=503,
             detail="Connection database operation failed.",
+        ) from error
+@router.post(
+    (
+        "/servers/{server_id}/connections/{connection_id}"
+        "/tools/{tool_name}"
+    ),
+    response_model=ExecuteToolResponse,
+    responses={
+        404: {"description": "Server, connection, or tool not found."},
+        502: {"description": "MCP tool execution failed."},
+        503: {"description": "Database operation failed."},
+        504: {"description": "MCP tool execution timed out."},
+    },
+)
+async def run_tool(
+    server_id: Annotated[int, Path(gt=0)],
+    connection_id: Annotated[int, Path(gt=0)],
+    tool_name: Annotated[
+        str,
+        Path(min_length=1, max_length=128),
+    ],
+    request: ExecuteToolRequest,
+    engine: EngineDependency,
+) -> ExecuteToolResponse:
+    try:
+        server = await read_server(
+            engine,
+            DEMO_COMPANY_ID,
+            server_id,
+        )
+
+        if server is None:
+            raise HTTPException(
+                status_code=404,
+                detail="Registered MCP server not found.",
+            )
+
+        if tool_name not in {
+            tool.name for tool in server.tools
+        }:
+            raise HTTPException(
+                status_code=404,
+                detail="Registered MCP tool not found.",
+            )
+
+        endpoint = await get_connection_endpoint(
+            engine,
+            DEMO_COMPANY_ID,
+            server_id,
+            connection_id,
+        )
+
+    except HTTPException:
+        raise
+
+    except ConnectionNotFoundError as error:
+        raise HTTPException(
+            status_code=404,
+            detail="Connection not found.",
+        ) from error
+
+    except (
+        SQLAlchemyError,
+        PostgresError,
+        TimeoutError,
+        OSError,
+    ) as error:
+        logger.error(
+            "Tool lookup failed (%s)",
+            type(error).__name__,
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="Registry database operation failed.",
+        ) from error
+
+    try:
+        return await call_mcp_tool(
+            endpoint=endpoint,
+            connection_id=connection_id,
+            tool_name=tool_name,
+            arguments=request.arguments,
+        )
+
+    except Exception as error:
+        logger.warning(
+            "MCP tool execution failed (%s)",
+            type(error).__name__,
+        )
+
+        if only_timeouts(error):
+            raise HTTPException(
+                status_code=504,
+                detail="MCP tool execution timed out.",
+            ) from error
+
+        raise HTTPException(
+            status_code=502,
+            detail="MCP tool execution failed.",
         ) from error
