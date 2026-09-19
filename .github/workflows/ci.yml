@@ -40,6 +40,9 @@ jobs:
 
       - name: Lint (syntax/undefined-name check)
         run: uv run --with ruff ruff check app --select E9,F
+      
+      - name: Run automated API tests
+        run: uv run python -m pytest -q
 
       - name: Import check (app builds without error)
         run: uv run python -c "from app.main import app"
